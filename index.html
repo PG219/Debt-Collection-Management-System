@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DCRS — Debt Collection Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #e8ff47;
+    --accent2: #ff6b35;
+    --accent3: #38d9f5;
+    --text: #f0f2f8;
+    --muted: #5a6072;
+    --danger: #ff4757;
+    --success: #2ed573;
+    --warning: #ffa502;
+    --legal: #a855f7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    padding: 0;
+  }
+
+  .logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-tag {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .logo-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .nav {
+    flex: 1;
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+
+  .nav-section {
+    padding: 8px 16px 4px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+    letter-spacing: 0.5px;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(232,255,71,0.05);
+  }
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent2);
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 220px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(10,12,16,0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .page-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0c10;
+    font-weight: 700;
+  }
+  .btn-primary:hover { background: #d4e840; transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #0a0c10; font-weight: 700; }
+
+  .content { padding: 32px 36px; }
+
+  /* ── PAGES ── */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.yellow::before { background: var(--accent); }
+  .stat-card.orange::before { background: var(--accent2); }
+  .stat-card.blue::before   { background: var(--accent3); }
+  .stat-card.purple::before { background: var(--legal); }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-sub { font-size: 10px; color: var(--muted); margin-top: 6px; }
+  .stat-trend { font-size: 10px; margin-top: 4px; }
+  .trend-up { color: var(--success); }
+  .trend-down { color: var(--danger); }
+
+  /* ── TABLE ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .card-count {
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead th {
+    padding: 10px 24px;
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 12px 24px; color: var(--text); }
+  td.muted { color: var(--muted); }
+
+  /* ── STATUS BADGES ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge::before { content: '●'; font-size: 7px; }
+  .badge-open     { background: rgba(56,217,245,0.1);  color: var(--accent3); }
+  .badge-closed   { background: rgba(46,213,115,0.1);  color: var(--success); }
+  .badge-legal    { background: rgba(168,85,247,0.1);  color: var(--legal); }
+  .badge-uncollectible { background: rgba(255,71,87,0.1); color: var(--danger); }
+  .badge-settled  { background: rgba(232,255,71,0.1);  color: var(--accent); }
+  .badge-high     { background: rgba(255,71,87,0.1);   color: var(--danger); }
+  .badge-medium   { background: rgba(255,165,2,0.1);   color: var(--warning); }
+  .badge-low      { background: rgba(46,213,115,0.1);  color: var(--success); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { display: flex; align-items: center; gap: 10px; }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .progress-pct { font-size: 10px; color: var(--muted); min-width: 32px; }
+
+  /* ── FORM ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 24px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: span 2; }
+  .form-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .form-control {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  .form-control option { background: var(--surface2); }
+  .form-actions {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 520px;
+    max-width: 95vw;
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  /* ── ALERT ── */
+  .alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 20px;
+    font-size: 12px;
+    z-index: 999;
+    display: none;
+    animation: slideIn 0.3s ease;
+    max-width: 320px;
+  }
+  .alert.show { display: flex; align-items: center; gap: 10px; }
+  .alert.error { border-color: var(--danger); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── TWO COL LAYOUT ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* ── AGENCY CARD ── */
+  .agency-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; padding: 24px; }
+  .agency-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.2s;
+  }
+  .agency-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .agency-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .agency-meta { font-size: 10px; color: var(--muted); margin-bottom: 12px; }
+  .agency-stat { display: flex; justify-content: space-between; font-size: 11px; margin-top: 6px; }
+  .agency-stat-label { color: var(--muted); }
+  .agency-stat-val { font-weight: 600; }
+
+  /* ── TIMELINE ── */
+  .timeline { padding: 24px; }
+  .timeline-item {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 28px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .timeline-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    color: var(--accent);
+  }
+  .timeline-content { flex: 1; }
+  .timeline-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .timeline-meta { font-size: 10px; color: var(--muted); }
+
+  /* ── SEARCH ── */
+  .search-wrap { position: relative; }
+  .search-wrap input {
+    padding-left: 32px !important;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-family: 'Syne', sans-serif; font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .empty-sub { font-size: 11px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── RISK METER ── */
+  .risk-meter { display: flex; gap: 3px; align-items: center; }
+  .risk-bar { width: 20px; height: 6px; border-radius: 2px; background: var(--border); }
+  .risk-bar.filled-high { background: var(--danger); }
+  .risk-bar.filled-med  { background: var(--warning); }
+  .risk-bar.filled-low  { background: var(--success); }
+
+  .amount { font-family: 'Syne', sans-serif; font-weight: 700; }
+  .amount-green { color: var(--success); }
+  .amount-red   { color: var(--danger); }
+
+  /* ── FILTER TABS ── */
+  .filter-tabs { display: flex; gap: 4px; }
+  .filter-tab {
+    padding: 5px 14px;
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .filter-tab:hover { color: var(--text); }
+  .filter-tab.active { background: var(--accent); color: #0a0c10; border-color: var(--accent); font-weight: 700; }
+
+  /* ── DETAIL PANEL ── */
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: var(--muted); }
+  .detail-val { font-weight: 500; }
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-tag">DCRS v1.0</div>
+    <div class="logo-title">Debt Collection<br>System</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard', this)">
+      <span class="nav-icon">◈</span> Dashboard
+    </div>
+
+    <div class="nav-section">Management</div>
+    <div class="nav-item" onclick="navigate('invoices', this)">
+      <span class="nav-icon">◻</span> Invoices
+      <span class="nav-badge" id="openCount">4</span>
+    </div>
+    <div class="nav-item" onclick="navigate('customers', this)">
+      <span class="nav-icon">◎</span> Customers
+    </div>
+    <div class="nav-item" onclick="navigate('agencies', this)">
+      <span class="nav-icon">◆</span> Agencies
+    </div>
+    <div class="nav-item" onclick="navigate('payments', this)">
+      <span class="nav-icon">⬡</span> Payments
+    </div>
+
+    <div class="nav-section">Compliance</div>
+    <div class="nav-item" onclick="navigate('legal', this)">
+      <span class="nav-icon">⚑</span> Legal Escalation
+      <span class="nav-badge" id="legalCount">1</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    Pranay Gupta
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="page-subtitle" id="pageSubtitle">Overview of debt recovery operations</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="openModal('invoiceModal')">+ New Invoice</button>
+      <button class="btn btn-primary" onclick="openModal('paymentModal')">+ Record Payment</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════ DASHBOARD PAGE ═══════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card yellow">
+          <div class="stat-label">Total Debt Outstanding</div>
+          <div class="stat-value" style="color:var(--accent)">₹3.47L</div>
+          <div class="stat-sub">Across 6 active invoices</div>
+          <div class="stat-trend trend-down">↓ 12% from last month</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Amount Recovered</div>
+          <div class="stat-value" style="color:var(--accent2)">₹1.12L</div>
+          <div class="stat-sub">4 payments processed</div>
+          <div class="stat-trend trend-up">↑ 8% this month</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Active Agencies</div>
+          <div class="stat-value" style="color:var(--accent3)">3</div>
+          <div class="stat-sub">All agencies operational</div>
+          <div class="stat-trend" style="color:var(--muted)">→ No change</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Legal Escalations</div>
+          <div class="stat-value" style="color:var(--legal)">1</div>
+          <div class="stat-sub">Requires immediate action</div>
+          <div class="stat-trend trend-down" style="color:var(--danger)">⚑ Review needed</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Recent Invoices -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">RECENT INVOICES</span>
+            <span class="card-count" id="invoiceTotal">6 total</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Amount Due</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashInvoiceTable"></tbody>
+          </table>
+        </div>
+
+        <!-- Agency Performance -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">AGENCY PERFORMANCE</span>
+          </div>
+          <div style="padding: 20px 24px;" id="agencyPerf"></div>
+        </div>
+      </div>
+
+      <!-- Payment Timeline -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">PAYMENT TIMELINE</span>
+        </div>
+        <div class="timeline" id="paymentTimeline"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ INVOICES PAGE ═══════════════ -->
+    <div class="page" id="page-invoices">
+      <div style="display:flex; gap:12px; margin-bottom:20px; align-items:center;">
+        <div class="search-wrap" style="flex:1;">
+          <span class="search-icon">🔍</span>
+          <input class="form-control" id="invoiceSearch" placeholder="Search by customer, status, amount..." oninput="filterInvoices()" style="width:100%;" />
+        </div>
+        <div class="filter-tabs" id="invoiceFilters">
+          <button class="filter-tab active" onclick="setFilter('All', this)">All</button>
+          <button class="filter-tab" onclick="setFilter('Open', this)">Open</button>
+          <button class="filter-tab" onclick="setFilter('Closed', this)">Closed</button>
+          <button class="filter-tab" onclick="setFilter('Legal Action Required', this)">Legal</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ALL INVOICES</span>
+          <span class="card-count" id="filteredCount">6 shown</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice ID</th>
+              <th>Customer</th>
+              <th>Amount Due</th>
+              <th>Paid</th>
+              <th>Progress</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Agency</th>
+            </tr>
+          </thead>
+          <tbody id="invoiceTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════ CUSTOMERS PAGE ═══════════════ -->
+    <div class="page" id="page-customers">
+      <div style="display:flex; gap:12px; margin-bottom:20px;">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setCustFilter('All', this)">All</button>
+          <button class="filter-tab" onclick="setCustFilter('Individual', this)">Individual</button>
+          <button class="filter-tab" onclick="setCustFilter('Corporate', this)">Corporate</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">CUSTOMER REGISTRY</span>
+          <span class="card-count">5 debtors</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name / Company</th>
+              <th>Type</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Risk Level</th>
+              <th>Identifier</th>
+              <th>Registered</th>
+            </tr>
+          </thead>
+          <tbody id="customerTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════ AGENCIES PAGE ═══════════════ -->
+    <div class="page" id="page-agencies">
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><span class="card-title">AGENCY ROSTER</span></div>
+        <div class="agency-grid" id="agencyGrid"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ PAYMENTS PAGE ═══════════════ -->
+    <div class="page" id="page-payments">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">PAYMENT LEDGER</span>
+          <span class="card-count" id="paymentCount">4 records</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Invoice ID</th>
+              <th>Amount Paid</th>
+              <th>Commission</th>
+              <th>Method</th>
+              <th>Date</th>
+              <th>Agency</th>
+            </tr>
+          </thead>
+          <tbody id="paymentTableBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">INVOICE PAYMENT SUMMARY</span></div>
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice ID</th>
+                <th>Amount Due</th>
+                <th>Total Paid</th>
+                <th>Remaining</th>
+                <th>Recovery</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ LEGAL PAGE ═══════════════ -->
+    <div class="page" id="page-legal">
+      <div class="stats-grid" style="grid-template-columns: repeat(3,1fr);">
+        <div class="stat-card purple">
+          <div class="stat-label">Legal Escalations</div>
+          <div class="stat-value" style="color:var(--legal)">1</div>
+          <div class="stat-sub">Invoice #3 — TechCorp</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Avg. Days Overdue</div>
+          <div class="stat-value" style="color:var(--accent2)">214</div>
+          <div class="stat-sub">For escalated invoices</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-label">Amount at Risk</div>
+          <div class="stat-value" style="color:var(--accent)">₹1.5L</div>
+          <div class="stat-sub">Pending legal recovery</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ESCALATED INVOICES — AUDIT TRAIL</span>
+          <span style="font-size:10px; color:var(--muted);">READ-ONLY · Legal Evidence</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice ID</th>
+              <th>Customer</th>
+              <th>Amount Due</th>
+              <th>Paid So Far</th>
+              <th>Due Date</th>
+              <th>Days Overdue</th>
+              <th>Assigned Agency</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="legalTableBody"></tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <div class="card-header"><span class="card-title">PAYMENT AUDIT TRAIL</span></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Invoice ID</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ═══ MODAL: NEW INVOICE ═══ -->
+<div class="modal-overlay" id="invoiceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">+ New Invoice</span>
+      <button class="modal-close" onclick="closeModal('invoiceModal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Customer</label>
+        <select class="form-control" id="inv_customer">
+          <option value="1">Rahul Mehta (Individual)</option>
+          <option value="2">Priya Singh (Individual)</option>
+          <option value="3">TechCorp Pvt. Ltd. (Corporate)</option>
+          <option value="4">Global Finance Corp. (Corporate)</option>
+          <option value="5">Amit Kumar (Individual)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Agency</label>
+        <select class="form-control" id="inv_agency">
+          <option value="">-- Unassigned --</option>
+          <option value="1">Swift Recovery Ltd.</option>
+          <option value="2">ClearDebt Solutions</option>
+          <option value="3">Alpha Collections Inc.</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount Due (₹)</label>
+        <input class="form-control" type="number" id="inv_amount" placeholder="e.g. 50000" min="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input class="form-control" type="date" id="inv_due"/>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('invoiceModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addInvoice()">Create Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: RECORD PAYMENT ═══ -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">+ Record Payment</span>
+      <button class="modal-close" onclick="closeModal('paymentModal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Invoice</label>
+        <select class="form-control" id="pay_invoice" onchange="updatePaymentInfo()"></select>
+      </div>
+      <div class="form-group full" id="paymentInfoBox" style="display:none;">
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:12px 16px; font-size:11px; color:var(--muted);">
+          <span id="paymentInfoText"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount Paid (₹)</label>
+        <input class="form-control" type="number" id="pay_amount" placeholder="e.g. 10000" min="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-control" id="pay_method">
+          <option>Bank Transfer</option>
+          <option>UPI</option>
+          <option>Cheque</option>
+          <option>Online Banking</option>
+          <option>Cash</option>
+          <option>NEFT</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('paymentModal')">Cancel</button>
+      <button class="btn btn-success" onclick="recordPayment()">Record Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT -->
+<div class="alert" id="alertBox">
+  <span id="alertIcon">✓</span>
+  <span id="alertText"></span>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  API CONFIG — Flask backend
+// ════════════════════════════════════════════════
+const API = 'http://localhost:5000/api';
+
+// ════════════════════════════════════════════════
+//  LIVE DATA — fetched from MySQL via Flask
+// ════════════════════════════════════════════════
+let agencies  = [];
+let customers = [];
+let invoices  = [];
+let payments  = [];
+let currentFilter     = 'All';
+let currentCustFilter = 'All';
+
+async function fetchAll() {
+  try {
+    const [ag, cu, inv, pay] = await Promise.all([
+      fetch(`${API}/agencies`).then(r => r.json()),
+      fetch(`${API}/customers`).then(r => r.json()),
+      fetch(`${API}/invoices`).then(r => r.json()),
+      fetch(`${API}/payments`).then(r => r.json()),
+    ]);
+    agencies  = ag.map(a => ({ id:a.Agency_ID, name:a.Agency_Name, contact:a.Contact_Number, rate:a.Commission_Rate, totalInvoices:a.total_invoices, closedInvoices:a.closed_invoices, totalRecovered:a.total_recovered, totalCommission:a.total_commission }));
+    customers = cu.map(c => ({ id:c.Customer_ID, email:c.Email, phone:c.Phone_Number, risk:c.Risk_Level, regDate:c.Registration_Date, type:c.customer_type, name:c.display_name, identifier:c.identifier }));
+    invoices  = inv.map(i => ({ id:i.Invoice_ID, amount:i.Amount_Due, due:i.Due_Date, status:i.Status, custId:i.Customer_ID, agencyId:i.Agency_ID, customerName:i.customer_name, customerType:i.customer_type, agencyName:i.Agency_Name, totalPaid:i.total_paid, daysOverdue:i.days_overdue }));
+    payments  = pay.map(p => ({ id:p.Payment_ID, invoiceId:p.Invoice_ID, amount:p.Amount_Paid, method:p.Payment_Method, date:p.Payment_Date, commission:p.Commission_Amount, agencyName:p.Agency_Name, customerName:p.customer_name }));
+    renderDashboard();
+  } catch(e) {
+    showAlert('Could not connect to Flask server. Is app.py running on port 5000?', true);
+    console.error(e);
+  }
+}
+
+// ════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════
+
+function getCustomer(id) { return customers.find(c => c.id === id); }
+function getAgency(id)   { return agencies.find(a => a.id === id); }
+
+function getTotalPaid(invoiceId) {
+  // Use pre-fetched totalPaid from API if available
+  const inv = invoices.find(i => i.id === invoiceId);
+  if (inv && inv.totalPaid !== undefined) return parseFloat(inv.totalPaid);
+  return payments.filter(p => p.invoiceId === invoiceId).reduce((s, p) => s + parseFloat(p.amount), 0);
+}
+
+function getCommission(payment) {
+  // Commission already calculated by MySQL trigger and returned from API
+  return payment.commission ? parseFloat(payment.commission) : 0;
+}
+
+function statusBadge(s) {
+  const map = {
+    'Open': 'badge-open',
+    'Closed': 'badge-closed',
+    'Legal Action Required': 'badge-legal',
+    'Uncollectible': 'badge-uncollectible',
+    'Settled': 'badge-settled',
+  };
+  return `<span class="badge ${map[s]||'badge-open'}">${s}</span>`;
+}
+
+function riskBadge(r) {
+  const map = { 'High':'badge-high', 'Medium':'badge-medium', 'Low':'badge-low' };
+  return `<span class="badge ${map[r]}">${r}</span>`;
+}
+
+function fmtMoney(n) {
+  return '₹' + Number(n).toLocaleString('en-IN');
+}
+
+function daysOverdue(dateStr) {
+  const due = new Date(dateStr);
+  const now = new Date();
+  return Math.max(0, Math.floor((now - due) / 86400000));
+}
+
+function progressBar(paid, due) {
+  const pct = Math.min(100, Math.round(paid / due * 100));
+  const color = pct >= 100 ? 'var(--success)' : pct > 50 ? 'var(--accent)' : 'var(--accent2)';
+  return `<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+    <span class="progress-pct">${pct}%</span>
+  </div>`;
+}
+
+function showAlert(msg, isError = false) {
+  const box = document.getElementById('alertBox');
+  document.getElementById('alertText').textContent = msg;
+  document.getElementById('alertIcon').textContent = isError ? '✕' : '✓';
+  box.className = 'alert show' + (isError ? ' error' : '');
+  setTimeout(() => box.className = 'alert', 3000);
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+
+const pageTitles = {
+  dashboard: ['Dashboard', 'Overview of debt recovery operations'],
+  invoices:  ['Invoices', 'Manage and track all debt invoices'],
+  customers: ['Customers', 'Individual & corporate debtor registry'],
+  agencies:  ['Agencies', 'Collection agency performance & details'],
+  payments:  ['Payments', 'Payment ledger & invoice summaries'],
+  legal:     ['Legal & Compliance', 'Escalated invoices — read-only audit trail'],
+};
+
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  const [title, sub] = pageTitles[page];
+  document.getElementById('pageTitle').textContent = title;
+  document.getElementById('pageSubtitle').textContent = sub;
+  renderPage(page);
+}
+
+function renderPage(page) {
+  if (page === 'dashboard')  renderDashboard();
+  if (page === 'invoices')   renderInvoices();
+  if (page === 'customers')  renderCustomers();
+  if (page === 'agencies')   renderAgencies();
+  if (page === 'payments')   renderPayments();
+  if (page === 'legal')      renderLegal();
+}
+
+// ════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════
+
+function renderDashboard() {
+  // Invoice table — customerName already in invoice from API
+  const tbody = document.getElementById('dashInvoiceTable');
+  tbody.innerHTML = invoices.slice(0,5).map(inv => {
+    return `<tr>
+      <td class="muted">#${inv.id}</td>
+      <td>${inv.customerName || '—'}</td>
+      <td><span class="amount">${fmtMoney(inv.amount)}</span></td>
+      <td>${statusBadge(inv.status)}</td>
+    </tr>`;
+  }).join('');
+
+  // Agency performance — stats already in agency object from API
+  const perfDiv = document.getElementById('agencyPerf');
+  perfDiv.innerHTML = agencies.map(ag => {
+    const recoveryRate = ag.totalInvoices ? Math.round((ag.closedInvoices / ag.totalInvoices) * 100) : 0;
+    return `<div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:12px;font-weight:600;">${ag.name}</span>
+        <span style="font-size:11px;color:var(--accent)">${recoveryRate}%</span>
+      </div>
+      ${progressBar(ag.closedInvoices, ag.totalInvoices || 1)}
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">
+        Recovered: ${fmtMoney(ag.totalRecovered)} · Rate: ${ag.rate}%
+      </div>
+    </div>`;
+  }).join('');
+
+  // Timeline
+  const timelineDiv = document.getElementById('paymentTimeline');
+  const sorted = [...payments].sort((a,b) => new Date(b.date) - new Date(a.date));
+  timelineDiv.innerHTML = sorted.map(p => {
+    return `<div class="timeline-item">
+      <div class="timeline-dot">₹</div>
+      <div class="timeline-content">
+        <div class="timeline-title">${fmtMoney(p.amount)} received · Invoice #${p.invoiceId}</div>
+        <div class="timeline-meta">${p.customerName || '—'} · ${p.method} · Commission: ${fmtMoney(p.commission || 0)} · ${String(p.date).split('T')[0]}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update badges
+  document.getElementById('openCount').textContent  = invoices.filter(i => i.status === 'Open').length;
+  document.getElementById('legalCount').textContent = invoices.filter(i => i.status === 'Legal Action Required').length;
+  document.getElementById('invoiceTotal').textContent = invoices.length + ' total';
+}
+
+// ════════════════════════════════════════════════
+//  INVOICES
+// ════════════════════════════════════════════════
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('#invoiceFilters .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderInvoices();
+}
+
+function filterInvoices() { renderInvoices(); }
+
+function renderInvoices() {
+  const search = (document.getElementById('invoiceSearch')?.value || '').toLowerCase();
+  let filtered = invoices.filter(inv => {
+    const matchFilter = currentFilter === 'All' || inv.status === currentFilter;
+    const matchSearch = !search ||
+      (inv.customerName||'').toLowerCase().includes(search) ||
+      inv.status.toLowerCase().includes(search) ||
+      String(inv.amount).includes(search) ||
+      String(inv.id).includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  document.getElementById('filteredCount').textContent = filtered.length + ' shown';
+
+  const tbody = document.getElementById('invoiceTableBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◻</div><div class="empty-title">No invoices found</div><div class="empty-sub">Try adjusting your filters</div></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(inv => {
+    const paid = parseFloat(inv.totalPaid || 0);
+    return `<tr>
+      <td><span style="color:var(--muted)">#</span>${inv.id}</td>
+      <td>
+        <div style="font-weight:600">${inv.customerName || '—'}</div>
+        <div style="font-size:10px;color:var(--muted)">${inv.customerType || ''}</div>
+      </td>
+      <td><span class="amount">${fmtMoney(inv.amount)}</span></td>
+      <td><span class="amount amount-green">${fmtMoney(paid)}</span></td>
+      <td style="min-width:140px">${progressBar(paid, inv.amount)}</td>
+      <td class="muted">${String(inv.due).split('T')[0]}</td>
+      <td>${statusBadge(inv.status)}</td>
+      <td>${inv.agencyName || '<span style="color:var(--muted)">Unassigned</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+//  CUSTOMERS
+// ════════════════════════════════════════════════
+
+function setCustFilter(f, el) {
+  currentCustFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    if (t.onclick && t.onclick.toString().includes('setCustFilter')) t.classList.remove('active');
+  });
+  el.classList.add('active');
+  renderCustomers();
+}
+
+function renderCustomers() {
+  const filtered = customers.filter(c => currentCustFilter === 'All' || c.type === currentCustFilter);
+  const tbody = document.getElementById('customerTableBody');
+  tbody.innerHTML = filtered.map(c => {
+    return `<tr>
+      <td class="muted">#${c.id}</td>
+      <td><div style="font-weight:600">${c.name}</div></td>
+      <td><span class="badge ${c.type==='Individual'?'badge-open':'badge-settled'}">${c.type}</span></td>
+      <td class="muted">${c.email}</td>
+      <td class="muted">${c.phone}</td>
+      <td>${riskBadge(c.risk)}</td>
+      <td class="muted" style="font-size:11px">${c.identifier}</td>
+      <td class="muted">${c.regDate}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+//  AGENCIES
+// ════════════════════════════════════════════════
+
+function renderAgencies() {
+  const grid = document.getElementById('agencyGrid');
+  grid.innerHTML = agencies.map(ag => {
+    return `<div class="agency-card">
+      <div class="agency-name">${ag.name}</div>
+      <div class="agency-meta">📞 ${ag.contact}</div>
+      <div class="agency-stat">
+        <span class="agency-stat-label">Commission Rate</span>
+        <span class="agency-stat-val" style="color:var(--accent)">${ag.rate}%</span>
+      </div>
+      <div class="agency-stat">
+        <span class="agency-stat-label">Invoices Assigned</span>
+        <span class="agency-stat-val">${ag.totalInvoices}</span>
+      </div>
+      <div class="agency-stat">
+        <span class="agency-stat-label">Invoices Closed</span>
+        <span class="agency-stat-val" style="color:var(--success)">${ag.closedInvoices}</span>
+      </div>
+      <div class="agency-stat">
+        <span class="agency-stat-label">Total Recovered</span>
+        <span class="agency-stat-val" style="color:var(--accent2)">${fmtMoney(ag.totalRecovered)}</span>
+      </div>
+      <div class="agency-stat">
+        <span class="agency-stat-label">Commission Earned</span>
+        <span class="agency-stat-val" style="color:var(--legal)">${fmtMoney(parseFloat(ag.totalCommission||0).toFixed(0))}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+//  PAYMENTS
+// ════════════════════════════════════════════════
+
+function renderPayments() {
+  document.getElementById('paymentCount').textContent = payments.length + ' records';
+  const tbody = document.getElementById('paymentTableBody');
+  tbody.innerHTML = payments.map(p => {
+    return `<tr>
+      <td class="muted">#${p.id}</td>
+      <td>#${p.invoiceId}</td>
+      <td><span class="amount amount-green">${fmtMoney(p.amount)}</span></td>
+      <td><span class="amount" style="color:var(--legal)">${fmtMoney(p.commission || 0)}</span></td>
+      <td>${p.method}</td>
+      <td class="muted">${String(p.date).split('T')[0]}</td>
+      <td>${p.agencyName || '<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  const sTbody = document.getElementById('summaryTableBody');
+  sTbody.innerHTML = invoices.map(inv => {
+    const paid = parseFloat(inv.totalPaid || 0);
+    const remaining = Math.max(0, inv.amount - paid);
+    return `<tr>
+      <td>#${inv.id}</td>
+      <td><span class="amount">${fmtMoney(inv.amount)}</span></td>
+      <td><span class="amount amount-green">${fmtMoney(paid)}</span></td>
+      <td><span class="amount ${remaining>0?'amount-red':''}">${fmtMoney(remaining)}</span></td>
+      <td style="min-width:140px">${progressBar(paid, inv.amount)}</td>
+      <td>${statusBadge(inv.status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLegal() {
+  const escalated = invoices.filter(i => i.status === 'Legal Action Required');
+  const tbody = document.getElementById('legalTableBody');
+  tbody.innerHTML = escalated.length ? escalated.map(inv => {
+    const paid = parseFloat(inv.totalPaid || 0);
+    return `<tr>
+      <td>#${inv.id}</td>
+      <td><div style="font-weight:600">${inv.customerName||'—'}</div><div style="font-size:10px;color:var(--muted)">${inv.customerType||''}</div></td>
+      <td><span class="amount">${fmtMoney(inv.amount)}</span></td>
+      <td><span class="amount amount-green">${fmtMoney(paid)}</span></td>
+      <td class="muted">${String(inv.due).split('T')[0]}</td>
+      <td><span style="color:var(--danger);font-weight:700">${inv.daysOverdue} days</span></td>
+      <td>${inv.agencyName || '—'}</td>
+      <td>${statusBadge(inv.status)}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⚑</div><div class="empty-title">No escalations</div><div class="empty-sub">All invoices are within compliance</div></div></td></tr>`;
+
+  const escalatedIds = escalated.map(i => i.id);
+  const relatedPayments = payments.filter(p => escalatedIds.includes(p.invoiceId));
+  const aTbody = document.getElementById('auditTableBody');
+  aTbody.innerHTML = relatedPayments.length ? relatedPayments.map(p => `<tr>
+    <td class="muted">#${p.id}</td>
+    <td>#${p.invoiceId}</td>
+    <td><span class="amount amount-green">${fmtMoney(p.amount)}</span></td>
+    <td>${p.method}</td>
+    <td class="muted">${String(p.date).split('T')[0]}</td>
+  </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No payments recorded for escalated invoices</td></tr>`;
+}
+
+// ════════════════════════════════════════════════
+//  MODALS
+// ════════════════════════════════════════════════
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'paymentModal') populatePaymentSelect();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function populatePaymentSelect() {
+  const sel = document.getElementById('pay_invoice');
+  const openInvs = invoices.filter(i => i.status !== 'Closed' && i.status !== 'Uncollectible');
+  sel.innerHTML = openInvs.map(inv => {
+    const paid = parseFloat(inv.totalPaid || 0);
+    const rem = inv.amount - paid;
+    return `<option value="${inv.id}">#${inv.id} — ${inv.customerName||'?'} — Remaining: ${fmtMoney(rem)}</option>`;
+  }).join('');
+  updatePaymentInfo();
+}
+
+function updatePaymentInfo() {
+  const invId = parseInt(document.getElementById('pay_invoice').value);
+  const inv = invoices.find(i => i.id === invId);
+  if (!inv) return;
+  const paid = parseFloat(inv.totalPaid || 0);
+  const remaining = inv.amount - paid;
+  const ag = inv.agencyId ? getAgency(inv.agencyId) : null;
+  const box = document.getElementById('paymentInfoBox');
+  document.getElementById('paymentInfoText').innerHTML =
+    `Amount Due: <strong style="color:var(--text)">${fmtMoney(inv.amount)}</strong> · 
+     Paid: <strong style="color:var(--success)">${fmtMoney(paid)}</strong> · 
+     Remaining: <strong style="color:var(--accent2)">${fmtMoney(remaining)}</strong>` +
+    (ag ? ` · Commission Rate: <strong style="color:var(--accent)">${ag.rate}%</strong>` : '');
+  box.style.display = 'block';
+}
+
+async function addInvoice() {
+  const custId   = parseInt(document.getElementById('inv_customer').value);
+  const agencyId = document.getElementById('inv_agency').value ? parseInt(document.getElementById('inv_agency').value) : null;
+  const amount   = parseFloat(document.getElementById('inv_amount').value);
+  const due      = document.getElementById('inv_due').value;
+
+  if (!amount || amount <= 0) { showAlert('Please enter a valid amount.', true); return; }
+  if (!due)                   { showAlert('Please select a due date.', true); return; }
+
+  try {
+    const res = await fetch(`${API}/invoices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount_due: amount, due_date: due, customer_id: custId, agency_id: agencyId })
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert(data.error || 'Failed to create invoice.', true); return; }
+    closeModal('invoiceModal');
+    showAlert(`Invoice #${data.invoice_id} created successfully!`);
+    document.getElementById('inv_amount').value = '';
+    document.getElementById('inv_due').value = '';
+    await fetchAll();
+  } catch(e) {
+    showAlert('Server error. Is Flask running?', true);
+  }
+}
+
+async function recordPayment() {
+  const invoiceId = parseInt(document.getElementById('pay_invoice').value);
+  const amount    = parseFloat(document.getElementById('pay_amount').value);
+  const method    = document.getElementById('pay_method').value;
+
+  if (!amount || amount <= 0) { showAlert('Please enter a valid amount.', true); return; }
+
+  try {
+    const res = await fetch(`${API}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invoice_id: invoiceId, amount_paid: amount, payment_method: method })
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert(data.error || 'Payment failed.', true); return; }
+    closeModal('paymentModal');
+    document.getElementById('pay_amount').value = '';
+    showAlert(`Payment of ${fmtMoney(amount)} recorded successfully!`);
+    await fetchAll(); // refresh all data from DB
+  } catch(e) {
+    showAlert('Server error. Is Flask running?', true);
+  }
+}
+
+// ════════════════════════════════════════════════
+//  INIT — fetch live data from MySQL
+// ════════════════════════════════════════════════
+fetchAll();</script>
+</body>
+</html>
